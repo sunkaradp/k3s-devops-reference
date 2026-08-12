@@ -1,0 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: app
+resources:
+  - backend/deployment.yaml
+  - backend/migration-job.yaml
+commonLabels:
+  app.kubernetes.io/part-of: reference-app
