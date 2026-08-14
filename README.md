@@ -51,4 +51,4 @@ docs/                    # the step-by-step guides above
 
 ## Status
 
-Work in progress — built and expanded incrementally. See individual `docs/` guides.
+Work in progress — built and expanded incrementally. See individual `docs/` guides
