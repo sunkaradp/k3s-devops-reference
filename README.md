@@ -1,54 +1,50 @@
 # k3s DevOps Reference
 
-A practical, end-to-end reference for standing up a production-style deployment on
-lightweight Kubernetes (**k3s**) — container → cluster → CI/CD → secrets →
-observability → safe migrations. Built from real platform work, distilled into a
-setup you can read top to bottom and actually follow.
+A hands-on reference for deploying and operating a small application on lightweight Kubernetes (k3s). The repository follows the delivery path from container image to cluster deployment, then covers secrets, observability, database migrations and resource configuration.
 
-> This is a learning/reference repo. No company code or real secrets — every
-> value is a placeholder you replace with your own.
+This is a learning and reference project. Examples use placeholders and should be reviewed before use in a real environment.
 
-## What's inside
+## Technology areas
 
-| Area | Tool | Why |
-|------|------|-----|
-| Containers | Docker | Reproducible builds; "works on my machine" stops mattering |
-| Orchestration | Kubernetes (k3s) | Lightweight cluster, ideal for small teams / single nodes |
-| CI/CD | GitHub Actions + self-hosted runner | Push → build → push image → deploy |
-| Secrets | Sealed Secrets | Encrypted secrets safe to commit to Git |
-| Observability | Prometheus, Grafana, Loki | See problems on a dashboard, not at 3 a.m. |
-| DB migrations | Kubernetes Job | Run once per deploy — no race across replicas |
-| Infra as Code | Terraform | Versioned, repeatable infrastructure |
+| Area | Tools | Purpose |
+|---|---|---|
+| Container build | Docker | Build a repeatable application image |
+| Orchestration | k3s, Kubernetes | Run and manage application workloads |
+| Delivery | GitHub Actions | Build and deploy from a version-controlled workflow |
+| Configuration and secrets | Sealed Secrets | Keep encrypted secret manifests in Git |
+| Observability | Prometheus, Grafana, Loki | Collect metrics, visualize signals and inspect logs |
+| Database changes | Kubernetes Job | Run migrations as a controlled one-off task |
+| Infrastructure | Terraform | Describe example infrastructure as code |
 
-## The setup order (and why it's this order)
+## Guides
 
-1. **[Containerize the app](docs/01-containerize.md)** — a clean Dockerfile first.
-2. **[Stand up the cluster](docs/02-cluster-k3s.md)** — k3s on a single node.
-3. **[CI/CD pipeline](docs/03-cicd-github-actions.md)** — automate build & deploy.
-4. **[Secrets with Sealed Secrets](docs/04-secrets-sealed-secrets.md)** — no plaintext in Git.
-5. **[Observability](docs/05-observability.md)** — Prometheus + Grafana + Loki.
-6. **[Safe database migrations](docs/06-migrations-job.md)** — one-off Job, not per-pod.
-7. **[Resource limits](docs/07-resource-limits.md)** — right-size CPU/memory so pods actually boot.
+The recommended order is intentional: establish a reproducible image before introducing cluster deployment and operational concerns.
 
-## Repo layout
+1. [Containerize the application](docs/01-containerize.md)
+2. [Create a k3s cluster](docs/02-cluster-k3s.md)
+3. [Configure GitHub Actions CI/CD](docs/03-cicd-github-actions.md)
+4. [Manage secrets with Sealed Secrets](docs/04-secrets-sealed-secrets.md)
+5. [Add metrics and logging](docs/05-observability.md)
+6. [Run database migrations as a Job](docs/06-migrations-job.md)
+7. [Configure CPU and memory resources](docs/07-resource-limits.md)
 
-```
-app/                     # sample app + Dockerfile
-k8s/base/                # Kustomize manifests (backend, frontend, job)
-.github/workflows/       # CI/CD pipeline
-terraform/               # infra provisioning (example)
-docs/                    # the step-by-step guides above
+## Repository layout
+
+```text
+app/                    Sample application and Dockerfile
+k8s/base/               Kubernetes manifests
+.github/workflows/      CI/CD workflow definitions
+terraform/              Example infrastructure configuration
+docs/                   Step-by-step implementation guides
 ```
 
-## Lessons baked in
+## Operational considerations
 
-- **"Application startup complete" ≠ healthy.** A clean boot log can hide a container
-  dying on the next line (OOM, throttling). Always check what happens *after* startup.
-- **"It works" ≠ "safe to scale."** Migrate-on-startup is fine at one replica and a
-  race condition at two. Move migrations to a one-off Job.
-- **Never store a secret in plaintext** — not in the cluster, not in Git. Encrypt at rest
-  and seal for version control.
+- **Readiness is not the same as process startup.** Configure probes around the application's ability to serve traffic, and inspect restarts and resource events after deployment.
+- **Migrations should have a defined lifecycle.** Running a migration independently in every application replica can create races; a controlled Job makes the operation explicit.
+- **Secrets need a lifecycle.** Do not commit plaintext credentials. Use a secret manager or an encryption workflow appropriate to the deployment environment.
+- **Resource requests and limits affect scheduling and stability.** Validate them against observed workload behavior rather than copying example values unchanged.
 
-## Status
+## Scope and status
 
-Work in progress — built and expanded incrementally. See individual `docs/` guides
+The repository is maintained as a practical reference and is expanded incrementally. Follow each guide for its prerequisites and implementation details. The examples are not a substitute for environment-specific security review, backup planning or production readiness testing.
