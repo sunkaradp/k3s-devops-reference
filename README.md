@@ -1,24 +1,23 @@
 # k3s DevOps Reference
 
-A hands-on reference for deploying and operating a small application on lightweight Kubernetes (k3s). The repository follows the delivery path from container image to cluster deployment, then covers secrets, observability, database migrations and resource configuration.
+A practical Kubernetes operations reference showing how a small backend can be containerized, deployed to k3s, configured with secrets and observability, and updated safely with a one-off database migration Job.
 
-This is a learning and reference project. Examples use placeholders and should be reviewed before use in a real environment.
+> **Project status:** this repository is a collection of implementation guides and example Kubernetes manifests. It is not a complete, runnable application or a production-ready platform. Several guide examples refer to application files, infrastructure and CI/CD workflows that are not included in this repository.
 
-## Technology areas
+## What is included
 
-| Area | Tools | Purpose |
+| Area | Repository content | What it demonstrates |
 |---|---|---|
-| Container build | Docker | Build a repeatable application image |
-| Orchestration | k3s, Kubernetes | Run and manage application workloads |
-| Delivery | GitHub Actions | Build and deploy from a version-controlled workflow |
-| Configuration and secrets | Sealed Secrets | Keep encrypted secret manifests in Git |
-| Observability | Prometheus, Grafana, Loki | Collect metrics, visualize signals and inspect logs |
-| Database changes | Kubernetes Job | Run migrations as a controlled one-off task |
-| Infrastructure | Terraform | Describe example infrastructure as code |
+| Kubernetes workload | `k8s/base/backend/deployment.yaml` | Deployment strategy, probes, image placeholder, configuration and resource requests/limits |
+| Database migrations | `k8s/base/backend/migration-job.yaml`, `app/scripts/` | Separating run-once migrations from application pod startup |
+| Kustomize | `k8s/base/kustomization.yaml` | A base manifest set for the backend and migration Job |
+| Operations guides | `docs/` | Containerization, k3s setup, CI/CD, secrets, observability, migrations and resource sizing |
+
+The guides discuss Docker, GitHub Actions, Sealed Secrets, Prometheus, Grafana and Loki. Those integrations are instructional examples; the corresponding Dockerfile, workflow definitions, sealed-secret resources and monitoring manifests are not currently committed here.
 
 ## Guides
 
-The recommended order is intentional: establish a reproducible image before introducing cluster deployment and operational concerns.
+Follow the guides in order:
 
 1. [Containerize the application](docs/01-containerize.md)
 2. [Create a k3s cluster](docs/02-cluster-k3s.md)
@@ -31,20 +30,26 @@ The recommended order is intentional: establish a reproducible image before intr
 ## Repository layout
 
 ```text
-app/                    Sample application and Dockerfile
-k8s/base/               Kubernetes manifests
-.github/workflows/      CI/CD workflow definitions
-terraform/              Example infrastructure configuration
-docs/                   Step-by-step implementation guides
+app/scripts/             Migration and pre-start shell scripts
+k8s/base/                Backend Deployment, migration Job and Kustomize base
+docs/                    Step-by-step implementation guides
+README.md                Project scope and guide index
+LICENSE                  Project license
 ```
 
-## Operational considerations
+## Important operational design points
 
-- **Readiness is not the same as process startup.** Configure probes around the application's ability to serve traffic, and inspect restarts and resource events after deployment.
-- **Migrations should have a defined lifecycle.** Running a migration independently in every application replica can create races; a controlled Job makes the operation explicit.
+- **Readiness is not process startup.** Configure probes around the application's ability to serve traffic, and inspect restarts and resource events after deployment.
+- **Migrations need a defined lifecycle.** Running migrations independently in every application replica can create races; a controlled Kubernetes Job makes the operation explicit.
 - **Secrets need a lifecycle.** Do not commit plaintext credentials. Use a secret manager or an encryption workflow appropriate to the deployment environment.
 - **Resource requests and limits affect scheduling and stability.** Validate them against observed workload behavior rather than copying example values unchanged.
+- **Example values are placeholders.** Replace `OWNER`, namespace values, image tags, secret names and application-specific commands before using the manifests.
 
-## Scope and status
+## Current limitations
 
-The repository is maintained as a practical reference and is expanded incrementally. Follow each guide for its prerequisites and implementation details. The examples are not a substitute for environment-specific security review, backup planning or production readiness testing.
+- The repository does not include an application implementation or Dockerfile, although the containerization guide provides an example.
+- No GitHub Actions workflow is committed; the CI/CD guide is a reference configuration.
+- No Terraform configuration or monitoring/Sealed Secrets manifests are committed.
+- The Kubernetes manifests reference ConfigMap and Secret resources that must be supplied by the deployment environment.
+
+Treat the examples as starting points. Review security, access control, backups, image provenance, rollout behavior and recovery procedures before adapting them for production.
